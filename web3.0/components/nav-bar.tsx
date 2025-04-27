@@ -18,7 +18,7 @@ export default function Navbar() {
   const { supabase } = useSupabase();
   const router = useRouter();
   const { toast } = useToast();
-  const [signin, setSignin] = useState(false);
+  const [signin, setSignin] = useState(true);
   
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
