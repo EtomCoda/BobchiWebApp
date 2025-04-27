@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { SupabaseProvider } from '@/components/providers/supabase-provider';
 import Navbar from '@/components/nav-bar';
+import { Analytics } from "@vercel/analytics/react"
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light">
           <SupabaseProvider>
+            <Analytics />
             <Navbar />
             {children}
             <Toaster />
