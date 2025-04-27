@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Flame, User, LogOut, ShoppingCart, UserCircle,LogIn } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Flame, User, LogOut, ShoppingCart, UserCircle, LogIn } from 'lucide-react';
 import { useSupabase } from './providers/supabase-provider';
 import { Button } from './ui/button';
 import {
@@ -12,14 +13,31 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
 
 export default function Navbar() {
   const { supabase } = useSupabase();
   const router = useRouter();
   const { toast } = useToast();
-  const [signin, setSignin] = useState(true);
-  
+  const [user, setUser] = useState<any>(null); 
+
+ 
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    getUser();
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => {
+      subscription?.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -33,7 +51,6 @@ export default function Navbar() {
         title: "Signed out",
         description: "You have successfully signed out.",
       });
-      setSignin(true);
       router.push('/');
       router.refresh();
     }
@@ -63,29 +80,33 @@ export default function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem asChild>
-                  <Link href="/profile" className="w-full flex items-center">
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
+                {user ? (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile" className="w-full flex items-center">
+                        <User className="mr-2 h-4 w-4" />
+                        Profile
+                      </Link>
+                    </DropdownMenuItem>
 
-                <DropdownMenuItem asChild>
-                  <Link href="/order-history" className="w-full flex items-center">
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Order History
-                  </Link>
-                </DropdownMenuItem>
-{signin ? (<DropdownMenuItem onClick={() => router.push('/auth') }>
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Sign in
-                </DropdownMenuItem>):(
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
-                </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/order-history" className="w-full flex items-center">
+                        <ShoppingCart className="mr-2 h-4 w-4" />
+                        Order History
+                      </Link>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign out
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <DropdownMenuItem onClick={() => router.push('/auth')}>
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Sign in
+                  </DropdownMenuItem>
                 )}
-                
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
